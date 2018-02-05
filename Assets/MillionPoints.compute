@@ -1,0 +1,59 @@
+﻿#pragma kernel Init
+#pragma kernel Update
+
+#include "Common.cginc"
+
+// スレッドグループのスレッドサイズ
+#define ThreadBlockSize 256
+
+struct ParticleData
+{
+	float3 Position;
+	float3 Velocity;
+	float3 Albedo;
+};
+
+RWStructuredBuffer<ParticleData> _ParticleDataBuffer;
+
+float _time;	// _Time is already defined at UnityUI.cginc?
+float3 mousePos;
+float attraction;
+
+float3 rotate_position(float3 position, float3 axis, float angle)
+{
+	float4 q = quat_from_axis_angle(axis, angle);
+	float3 v = position.xyz;
+	return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);
+}
+
+float GetRandomNumber(float2 vec, int Seed)
+{
+	return frac(sin(dot(vec.xy, float2(12.9898, 78.233)) + Seed) * 43758.5453);
+}
+
+[numthreads(ThreadBlockSize, 1, 1)]
+void Init(uint3 id : SV_DispatchThreadID)
+{
+	// インデックス取得
+	const unsigned int index = id.x;
+
+	_ParticleDataBuffer[index].Position = (RandomVector01(index)-0.5) * 10;
+	_ParticleDataBuffer[index].Albedo = float3(1, 1, 1);
+}
+
+[numthreads(ThreadBlockSize, 1, 1)]
+void Update(uint3 id : SV_DispatchThreadID)
+{
+	// get index
+	const unsigned int index = id.x;
+
+	float3 p = _ParticleDataBuffer[index].Position;
+	float3 v = _ParticleDataBuffer[index].Velocity * 0.98;
+	float3 to = mousePos - p;
+	float dst = max(0.0001, length(to));
+	float3 force = normalize(to) / dst;
+	v += force * attraction - p*0.00001;
+
+	_ParticleDataBuffer[index].Position = p + v;
+	_ParticleDataBuffer[index].Velocity = v;
+}
