@@ -287,7 +287,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _particleCount: 1000000
-  _phi: 3.1415927
+  _life: 100
+  _range: 100
   _ComputeShader: {fileID: 7200000, guid: 55f672aaafbe1d347b5dedb9cb2e5279, type: 3}
   _material: {fileID: 2100000, guid: 8eb5bcb266a93a34b80205ba57a2603b, type: 2}
   _MeshScale: {x: 1, y: 1, z: 1}

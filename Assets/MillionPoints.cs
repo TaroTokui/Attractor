@@ -16,6 +16,7 @@ public class MillionPoints : MonoBehaviour {
         Vector3 Velocity;
         Vector3 Albedo;
         float Life;
+        float Age;
         bool isActive;
     }
 

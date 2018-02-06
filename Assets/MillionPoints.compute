@@ -12,6 +12,7 @@ struct ParticleData
 	float3 Velocity;
 	float3 Albedo;
 	float Life;
+	float Age;
 	bool isActive;
 };
 
@@ -47,6 +48,7 @@ void Init(uint3 id : SV_DispatchThreadID)
 	_ParticleDataBuffer[index].Position = RandomVector(index) * _Range;
 	_ParticleDataBuffer[index].Albedo = float3(1, 1, 1);
 	_ParticleDataBuffer[index].Life = abs(Random(index)) * _Life;
+	_ParticleDataBuffer[index].Life = 0;
 	_ParticleDataBuffer[index].isActive = true;
 }
 
@@ -72,6 +74,7 @@ void Update(uint3 id : SV_DispatchThreadID)
 		_ParticleDataBuffer[index].Life = abs(Random(index + _time)) * _Life;
 	}
 
+	_ParticleDataBuffer[index].Age = min(1, max(0, _ParticleDataBuffer[index].Life / _Life));
 	_ParticleDataBuffer[index].Position = p + v;
 	_ParticleDataBuffer[index].Velocity = v;
 

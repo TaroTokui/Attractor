@@ -11,8 +11,6 @@
 		//Tags{ "Queue" = "Transparent" "RenderType" = "Transparent" }
 		Tags{ "RenderType" = "Transparent" "Queue" = "Transparent" }
 
-		//Cull Off
-
 		CGPROGRAM
 
 		//#pragma surface surf Standard vertex:vert addshadow alpha:fade
@@ -46,6 +44,7 @@
 			float3 Velocity;
 			float3 Albedo;
 			float Life;
+			float Age;
 			bool isActive;
 		};
 
@@ -75,10 +74,7 @@
 			matrix_._14_24_34 += p.Position;
 			v.vertex = mul(matrix_, v.vertex);
 
-			float a = 1.0 - pow((p.Life / 5.0 - 0.5), 2);
-			//a = p.isActive ? a : 0;
-
-			v.color = fixed4(p.Albedo, p.Life / 10.0);
+			v.color = fixed4(p.Albedo, p.Age);
 			#endif
 		}
 
@@ -89,8 +85,7 @@
 		void surf(Input IN, inout SurfaceOutputStandard o)
 		{
 			o.Albedo = IN.color.rgb * _Color.rgb;
-			//o.Alpha = _Color.a;// IN.color.a;
-			o.Alpha = IN.color.a;
+			o.Alpha = IN.color.a * _Color.a;
 			o.Metallic = _Metallic;
 			o.Smoothness = _Smoothness;
 			o.Normal = float3(0, 0, IN.vface < 0 ? -1 : 1);
