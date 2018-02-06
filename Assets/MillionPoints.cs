@@ -12,9 +12,11 @@ public class MillionPoints : MonoBehaviour {
 
     struct ParticleData
     {
-        public Vector3 Position;
-        public Vector3 Velocity;
-        public Vector3 Albedo;
+        Vector3 Position;
+        Vector3 Velocity;
+        Vector3 Albedo;
+        float Life;
+        bool isActive;
     }
 
     #endregion // Defines
@@ -24,10 +26,13 @@ public class MillionPoints : MonoBehaviour {
 
     [SerializeField]
     int _particleCount = 1000000;
+    
+    [SerializeField]
+    float _life = 10;
 
     [SerializeField]
-    [Range(-Mathf.PI, Mathf.PI)]
-    float _phi = Mathf.PI;
+    [Range(0, 100)]
+    float _range = 50;
 
     [SerializeField]
     ComputeShader _ComputeShader;
@@ -82,12 +87,11 @@ public class MillionPoints : MonoBehaviour {
         // バッファ生成
         _ParticleDataBuffer = new ComputeBuffer(_particleCount, Marshal.SizeOf(typeof(ParticleData)));
         _GPUInstancingArgsBuffer = new ComputeBuffer(1, _GPUInstancingArgs.Length * sizeof(uint), ComputeBufferType.IndirectArguments);
-        var particleDataArr = new ParticleData[_particleCount];
 
         // 初期化
         int kernelId = _ComputeShader.FindKernel("Init");
-        //_ComputeShader.SetInt("_Width", _instanceCountX);
-        //_ComputeShader.SetInt("_Height", _instanceCountY);
+        _ComputeShader.SetFloat("_Life", _life);
+        _ComputeShader.SetFloat("_Range", _range);
         _ComputeShader.SetBuffer(kernelId, "_ParticleDataBuffer", _ParticleDataBuffer);
         _ComputeShader.Dispatch(kernelId, (Mathf.CeilToInt(_particleCount / ThreadBlockSize) + 1), 1, 1);
         
@@ -114,6 +118,9 @@ public class MillionPoints : MonoBehaviour {
         // ComputeShader
         int kernelId = _ComputeShader.FindKernel("Update");
         _ComputeShader.SetFloat("_time", Time.time / 5.0f);
+        _ComputeShader.SetFloat("dt", Time.deltaTime);
+        _ComputeShader.SetFloat("_Life", _life);
+        _ComputeShader.SetFloat("_Range", _range);
         _ComputeShader.SetVector("mousePos", mousePos);
         _ComputeShader.SetFloat("attraction", attraction);
         _ComputeShader.SetBuffer(kernelId, "_ParticleDataBuffer", _ParticleDataBuffer);

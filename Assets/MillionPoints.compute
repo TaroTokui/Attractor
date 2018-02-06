@@ -11,13 +11,19 @@ struct ParticleData
 	float3 Position;
 	float3 Velocity;
 	float3 Albedo;
+	float Life;
+	bool isActive;
 };
+
 
 RWStructuredBuffer<ParticleData> _ParticleDataBuffer;
 
 float _time;	// _Time is already defined at UnityUI.cginc?
+float dt;
 float3 mousePos;
 float attraction;
+float _Life;
+float _Range;
 
 float3 rotate_position(float3 position, float3 axis, float angle)
 {
@@ -31,29 +37,42 @@ float GetRandomNumber(float2 vec, int Seed)
 	return frac(sin(dot(vec.xy, float2(12.9898, 78.233)) + Seed) * 43758.5453);
 }
 
+
 [numthreads(ThreadBlockSize, 1, 1)]
 void Init(uint3 id : SV_DispatchThreadID)
 {
 	// インデックス取得
 	const unsigned int index = id.x;
 
-	_ParticleDataBuffer[index].Position = (RandomVector01(index)-0.5) * 10;
+	_ParticleDataBuffer[index].Position = RandomVector(index) * _Range;
 	_ParticleDataBuffer[index].Albedo = float3(1, 1, 1);
+	_ParticleDataBuffer[index].Life = abs(Random(index)) * _Life;
+	_ParticleDataBuffer[index].isActive = true;
 }
+
 
 [numthreads(ThreadBlockSize, 1, 1)]
 void Update(uint3 id : SV_DispatchThreadID)
 {
 	// get index
 	const unsigned int index = id.x;
-
-	float3 p = _ParticleDataBuffer[index].Position;
-	float3 v = _ParticleDataBuffer[index].Velocity * 0.98;
+	ParticleData particle = _ParticleDataBuffer[index];
+	float3 p = particle.Position;
+	float3 v = particle.Velocity * 0.98;
 	float3 to = mousePos - p;
 	float dst = max(0.0001, length(to));
 	float3 force = normalize(to) / dst;
-	v += force * attraction - p*0.00001;
+	v += force * attraction + p*0.00001;
+
+	_ParticleDataBuffer[index].Life -= dt;
+
+	if (_ParticleDataBuffer[index].Life < 0) {
+		p = RandomVector(index + _time) * _Range;
+		v = 0;
+		_ParticleDataBuffer[index].Life = abs(Random(index + _time)) * _Life;
+	}
 
 	_ParticleDataBuffer[index].Position = p + v;
 	_ParticleDataBuffer[index].Velocity = v;
+
 }
